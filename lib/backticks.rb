@@ -1,7 +1,8 @@
-require "backticks/version"
-require "backticks/cli"
-require "backticks/command"
-require "backticks/runner"
+require_relative 'backticks/version'
+require_relative 'backticks/cli'
+require_relative 'backticks/command'
+require_relative 'backticks/runner'
+require_relative 'backticks/ext'
 
 module Backticks
   # Run a command.

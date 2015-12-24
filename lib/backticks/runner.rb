@@ -28,8 +28,11 @@ module Backticks
     # @return [Boolean]
     attr_accessor :buffered
 
+    # @return [#parameters] the CLI-translation object used by this runner
+    attr_reader :cli
+
     # Create an instance of Runner.
-    # @param [#parameters] cli object ysed to convert Ruby method parameters into command-line parameters
+    # @param [#parameters] cli object used to convert Ruby method parameters into command-line parameters
     def initialize(cli:Backticks::CLI::Getopt)
       @interactive = false
       @buffered = false
@@ -39,19 +42,22 @@ module Backticks
     # Run a command whose parameters are expressed using some Rubyish sugar.
     # This method accepts an arbitrary number of positional parameters; each
     # parameter can be a Hash, an array, or a simple Object. Arrays and simple
-    # objects are appended to argv as "bare" words; Hashes are translated to
-    # command-line options and then appended to argv.
+    # objects are appended to argv as words of the command; Hashes are
+    # translated to command-line options and then appended to argv.
     #
-    # The
+    # Hashes are processed by @cli, defaulting to Backticks::CLI::Getopt and
+    # easily overridden by passing the `cli` option to #initialize.
+    #
+    # @see Backticks::CLI::Getopt for option-Hash format information
+    #
+    # @param [Array] args list of command words and options
     #
     # @return [Command] the running command
     #
     # @example Run docker-compose with complex parameters
     #   command('docker-compose', {file: 'joe.yml'}, 'up', {d:true}, 'mysvc')
-    #
-    # @see #options for information on Hash-to-flag translation
-    def command(*cmd)
-      argv = @cli.parameters(*cmd)
+    def command(*args)
+      argv = @cli.parameters(*args)
 
       if self.buffered
         run_buffered(argv)

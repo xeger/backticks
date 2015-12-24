@@ -31,6 +31,8 @@ module Backticks
       @stderr = stderr
       @interactive = interactive
 
+      stdin.close unless @interactive
+
       @captured_input  = String.new.force_encoding(Encoding::BINARY)
       @captured_output = String.new.force_encoding(Encoding::BINARY)
       @captured_error  = String.new.force_encoding(Encoding::BINARY)

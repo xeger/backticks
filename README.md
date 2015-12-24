@@ -26,7 +26,16 @@ Or install it yourself as:
 ```ruby
 require 'backticks'
 
-# The easy way
+# The lazy way; provides no CLI sugar, but benefits from unbuffered output.
+# Many Unix utilities produce colorized output when stdout is a TTY; be
+# prepared to handle escape codes in the output.
+shell = Object.new ; shell.extend(Backticks::Ext)
+shell.instance_eval do
+  puts `ls -l`
+  raise 'Oh no!' unless $?.success?
+end
+
+# The easy way.
 output = Backticks.command('ls', R:true, '*.rb')
 puts "Exit status #{$?.to_i}. Output:"
 puts output
