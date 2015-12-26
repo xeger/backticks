@@ -1,9 +1,14 @@
 # Backticks
 
 Backticks is an intuitive OOP wrapper for invoking command-line processes and
-interacting with them. It uses PTYs
+interacting with them. It has some rare features that make it especially well-
+suited for interactive or time-sensitive capture:
+  - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for stdout/stdin
+  - Captures input as well as output
 
-By default, processes that you invoke
+If you want to write a record/playback application for the terminal, or write
+functional tests that verify your program's output in real time, Backticks is
+exactly what you've been looking for!
 
 ## Installation
 
@@ -26,22 +31,23 @@ Or install it yourself as:
 ```ruby
 require 'backticks'
 
-# The lazy way; provides no CLI sugar, but benefits from unbuffered output.
-# Many Unix utilities produce colorized output when stdout is a TTY; be
-# prepared to handle escape codes in the output.
+# The lazy way; provides no CLI sugar, but benefits from unbuffered output,
+# and allows you to override Ruby's built-in backticks method.
 shell = Object.new ; shell.extend(Backticks::Ext)
 shell.instance_eval do
   puts `ls -l`
   raise 'Oh no!' unless $?.success?
 end
+# The just-as-lazy but less-magical way.
+Backticks.system('ls -l') || raise('Oh no!')
 
-# The easy way.
-output = Backticks.command('ls', R:true, '*.rb')
+# The easy way. Uses default options; returns the command's output as a String.
+output = Backticks.run('ls', R:true, '*.rb')
 puts "Exit status #{$?.to_i}. Output:"
 puts output
 
-# The hard way; allows customization such as interactive mode, which proxies
-# the child process's stdin, stdout and stderr to the parent process.
+# The hard way. Allows customized behavior; returns a Command object that
+# allows you to interact with the running command.
 command = Backticks::Runner.new(interactive:true).command('ls', R:true, '*.rb')
 command.join
 puts "Exit status: #{command.status.to_i}. Output:"
@@ -50,16 +56,47 @@ puts command.captured_output
 
 ### Buffering
 
-By default, Backticks allocates a pseudo-TTY for stdout and two Unix pipes for
-stderr/stdin; this captures stdout in real-time, but stderr and
-stdin are subject to unavoidable Unix pipe buffering.
+By default, Backticks allocates a pseudo-TTY for stdin/stdout and a Unix pipe
+for stderr; this captures the program's output and the user's input in realtime,
+but stderr is buffered according to the whim of the kernel's pipe subsystem.
 
-To use pipes for all io streams, enable buffering when you construct your
-Runner:
+To use pipes for all I/O streams, enable buffering on the Runner:
 
 ```ruby
-Backticks::Runner.new(buffered:true)
+# at initialize-time
+r = Backticks::Runner.new(buffered:true)
+
+# or later on
+r.buffered = false
 ```
+
+### Interactivity
+
+If you set `interactive:true` on the Runner, the console of the calling (Ruby)
+process is "tied" to the child's I/O streams, allowing the user to interact
+with the child process even as its input and output are captured for later use.
+
+If the child process will use raw input, you need to set the parent's console
+accordingly:
+
+```ruby
+require 'io/console'
+# In IRB, call raw! on same line as command; IRB prompt uses raw I/O
+STDOUT.raw! ; Backticks::Runner.new(interactive:true).command('vi').join
+```
+
+### Literally Overriding Ruby's Backticks
+
+It's a terrible idea, but you can use this gem to change the behavior of
+backticks system-wide by mixing it into Kernel.
+
+```ruby
+require 'backticks'
+include Backticks::Ext
+`echo Ruby lets me shoot myself in the foot`
+```
+
+If you do this, I will hunt you down and scoff at you. You have been warned!
 
 ## Development
 

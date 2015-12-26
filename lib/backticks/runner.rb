@@ -33,10 +33,10 @@ module Backticks
 
     # Create an instance of Runner.
     # @param [#parameters] cli object used to convert Ruby method parameters into command-line parameters
-    def initialize(cli:Backticks::CLI::Getopt)
-      @interactive = false
-      @buffered = false
+    def initialize(buffered:false, cli:Backticks::CLI::Getopt, interactive:false)
+      @buffered = buffered
       @cli = cli
+      @interactive = interactive
     end
 
     # Run a command whose parameters are expressed using some Rubyish sugar.
@@ -73,14 +73,18 @@ module Backticks
     # @return [Command] the running command
     private def run_unbuffered(argv)
       stdout, stdout_w = PTY.open
-      stdin_r, stdin = IO.pipe
-      stderr, stderr_w = IO.pipe
+      stdin_r, stdin = PTY.open
+      stderr, stderr_w = PTY.open
       pid = spawn(*argv, in: stdin_r, out: stdout_w, err: stderr_w)
       stdin_r.close
       stdout_w.close
       stderr_w.close
+      unless @interactive
+        stdin.close
+        stdin = nil
+      end
 
-      Command.new(pid, stdin, stdout, stderr, interactive:@interactive)
+      Command.new(pid, stdin, stdout, stderr)
     end
 
     # Run a command. Perform no translation or substitution. Use a pipe
@@ -92,8 +96,12 @@ module Backticks
     # @return [Command] the running command
     private def run_buffered(argv)
       stdin, stdout, stderr, thr = Open3.popen3(*argv)
+      unless @interactive
+        stdin.close
+        stdin = nil
+      end
 
-      Command.new(thr.pid, stdin, stdout, stderr, interactive:@interactive)
+      Command.new(thr.pid, stdin, stdout, stderr)
     end
   end
 end

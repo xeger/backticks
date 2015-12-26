@@ -1,7 +1,7 @@
 module Backticks
   module Ext
-    def `(str)
-      Backticks.command(str)
+    def `(cmd)
+      Backticks.run(cmd)
     end
   end
 end

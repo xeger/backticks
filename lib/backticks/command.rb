@@ -24,18 +24,19 @@ module Backticks
     attr_reader :captured_input, :captured_output, :captured_error, :status
 
     # Watch a running command.
-    def initialize(pid, stdin, stdout, stderr, interactive:false)
+    def initialize(pid, stdin, stdout, stderr)
       @pid = pid
       @stdin = stdin
       @stdout = stdout
       @stderr = stderr
-      @interactive = interactive
-
-      stdin.close unless @interactive
 
       @captured_input  = String.new.force_encoding(Encoding::BINARY)
       @captured_output = String.new.force_encoding(Encoding::BINARY)
       @captured_error  = String.new.force_encoding(Encoding::BINARY)
+    end
+
+    def interactive?
+      !@stdin.nil?
     end
 
     # Block until the command exits, or until limit seconds have passed. If
@@ -76,7 +77,7 @@ module Backticks
     # @return [String,nil] fresh bytes from stdout/stderr, or nil if no output
     private def capture(limit=nil)
       streams = [@stdout, @stderr]
-      streams << STDIN if @interactive
+      streams << STDIN if interactive?
 
       if limit
         tf = Time.now + limit
@@ -103,7 +104,7 @@ module Backticks
         data = @stdout.readpartial(CHUNK) rescue nil
         if data
           @captured_output << data
-          STDOUT.write(data) if @interactive
+          STDOUT.write(data) if interactive?
           fresh_output = data
         end
       end
@@ -113,7 +114,7 @@ module Backticks
         data = @stderr.readpartial(CHUNK) rescue nil
         if data
           @captured_error << data
-          STDERR.write(data) if @interactive
+          STDERR.write(data) if interactive?
         end
       end
       fresh_output
