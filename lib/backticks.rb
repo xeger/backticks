@@ -6,19 +6,19 @@ require_relative 'backticks/ext'
 
 module Backticks
   # Run a command; return a Command object that can be used to interact with
-  # the running process.
+  # the running process. Method parameters are passed through to the Runner.
   #
-  # @param [String] cmd
+  # @see Backticks::Runner#command
   # @return [Backticks::Command] a running command
-  def self.new(cmd)
-    Backticks::Runner.new.command(cmd)
+  def self.new(*cmd)
+    Backticks::Runner.new.command(*cmd)
   end
 
   # Run a command; return its stdout.
   #
   # @param [String] cmd
   # @return [String] the command's output
-  def self.run(cmd)
+  def self.run(*cmd)
     command = self.new(*cmd)
     command.join
     command.captured_output
