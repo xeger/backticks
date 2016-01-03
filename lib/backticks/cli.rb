@@ -73,27 +73,35 @@ module Backticks
       def self.options(**opts)
         flags = []
 
-        # Transform opts into golang flags-style command line parameters;
+        # Transform opts into getopt-style command line parameters;
         # append them to the command.
         opts.each do |kw, arg|
           if kw.length == 1
-            if arg == true
-              # true: boolean flag
-              flags << "-#{kw}"
-            elsif arg
-              # truthey: option that has a value
-              flags << "-#{kw}" << arg.to_s
-            else
-              # falsey: omit boolean flag
-            end
+            # short-form option e.g. "-a" or "-x hello"
+            pre='-'
+            eql=' '
           else
+            # long-form option e.g. "--ask" or "--extra=hello"
             kw = kw.to_s.gsub('_','-')
+            pre='--'
+            eql='='
+          end
+
+          # options can be single- or multi-valued; normalize the processing
+          # of both by "upconverting" single options to an array or values.
+          if arg.kind_of?(Array)
+            values = arg
+          else
+            values = [arg]
+          end
+
+          values.each do |arg|
             if arg == true
               # true: boolean flag
-              flags << "--#{kw}"
+              flags << "#{pre}#{kw}"
             elsif arg
               # truthey: option that has a value
-              flags << "--#{kw}=#{arg}"
+              flags << "#{pre}#{kw}#{eql}#{arg}"
             else
               # falsey: omit boolean flag
             end

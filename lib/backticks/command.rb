@@ -46,6 +46,8 @@ module Backticks
     #
     # @param [Float,Integer] limit number of seconds to wait before returning
     def join(limit=nil)
+      return self if @status # preserve idempotency
+
       if limit
         tf = Time.now + limit
       else
@@ -115,9 +117,12 @@ module Backticks
         if data
           @captured_error << data
           STDERR.write(data) if interactive?
+          fresh_error = data
         end
       end
-      fresh_output
+
+      # return freshly-captured text(if any)
+      fresh_output || fresh_error
     rescue Interrupt
       # Proxy Ctrl+C to the child
       (Process.kill('INT', @pid) rescue nil) if @interactive

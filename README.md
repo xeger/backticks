@@ -1,14 +1,28 @@
 # Backticks
 
 Backticks is an intuitive OOP wrapper for invoking command-line processes and
-interacting with them. It has some rare features that make it especially well-
-suited for interactive or time-sensitive capture:
-  - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for stdout/stdin
+interacting with them. It improves on Ruby's built-in invocation methods in a
+few ways:
+  - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for unbuffered I/O
   - Captures input as well as output
+  - Intuitive API that accepts CLI parameters as Ruby positional and keyword args
 
 If you want to write a record/playback application for the terminal, or write
 functional tests that verify your program's output in real time, Backticks is
 exactly what you've been looking for!
+
+For an example of the intuitive API, let's consider how we list a bunch of
+files or search for some text with Backticks:
+
+```ruby
+# invokes "ls -l -R"
+Backticks.run 'ls', l:true, R:true
+
+# invokes "grep -H --context=2 --regexp=needle haystack.txt"
+Backticks.run 'grep', {H:true, context:2, regexp:'needle'}, 'haystack.txt'
+```
+
+Notice how running commands feels like a plain old Ruby method call.
 
 ## Installation
 

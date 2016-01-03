@@ -56,15 +56,16 @@ module Backticks
     #
     # @example Run docker-compose with complex parameters
     #   command('docker-compose', {file: 'joe.yml'}, 'up', {d:true}, 'mysvc')
-    def command(*args)
+    def run(*args)
       argv = @cli.parameters(*args)
-
       if self.buffered
         run_buffered(argv)
       else
         run_unbuffered(argv)
       end
     end
+
+    alias command run
 
     # Run a command. Use a pty to capture the unbuffered output.
     #
