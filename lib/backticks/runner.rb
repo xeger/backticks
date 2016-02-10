@@ -71,7 +71,8 @@ module Backticks
     # @param [Array] argv command to run; argv[0] is program name and the
     #   remaining elements are parameters and flags
     # @return [Command] the running command
-    private def run_unbuffered(argv)
+    private
+    def run_unbuffered(argv)
       stdout, stdout_w = PTY.open
       stdin_r, stdin = PTY.open
       stderr, stderr_w = PTY.open
@@ -94,7 +95,7 @@ module Backticks
     # @param [Array] argv command to run; argv[0] is program name and the
     #   remaining elements are command-line arguments.
     # @return [Command] the running command
-    private def run_buffered(argv)
+    def run_buffered(argv)
       stdin, stdout, stderr, thr = Open3.popen3(*argv)
       unless @interactive
         stdin.close

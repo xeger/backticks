@@ -75,7 +75,8 @@ module Backticks
     #
     # @param [Float,Integer] number of seconds to wait before returning nil
     # @return [String,nil] fresh bytes from stdout/stderr, or nil if no output
-    private def capture(limit=nil)
+    private
+    def capture(limit=nil)
       streams = [@stdout, @stderr]
       streams << STDIN if interactive?
 
