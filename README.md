@@ -1,10 +1,21 @@
-# Backticks
+# Introduction
 
-Backticks is an intuitive OOP wrapper for invoking command-line processes and
-interacting with them. It has some rare features that make it especially well-
-suited for interactive or time-sensitive capture:
-  - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for stdout/stdin
+Backticks is a powerful, intuitive OOP wrapper for invoking command-line processes and
+interacting with them.
+
+"Powerful" comes from features that make Backticks especially well suited for time-sensitive
+or record/playback applications:
+  - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for realtime stdout/stdin
   - Captures input as well as output
+  - Separates stdout from stderr
+
+"Intuitive" comes from a DSL that lets you provide command-line arguments as if they were
+Ruby method arguments:
+
+```
+Backticks.run 'ls', R:true, ignore_backups:true, hide:'.git'
+Backticks.run 'cp' {f:true}, '*.rb', '/mnt/awesome'
+```
 
 If you want to write a record/playback application for the terminal, or write
 functional tests that verify your program's output in real time, Backticks is
