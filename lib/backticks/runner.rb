@@ -33,10 +33,16 @@ module Backticks
 
     # Create an instance of Runner.
     # @param [#parameters] cli object used to convert Ruby method parameters into command-line parameters
-    def initialize(buffered:false, cli:Backticks::CLI::Getopt, interactive:false)
-      @buffered = buffered
-      @cli = cli
-      @interactive = interactive
+    def initialize(options={})
+      options = {
+        :buffered => false,
+        :cli => Backticks::CLI::Getopt,
+        :interactive => false,
+      }.merge(options)
+
+      @buffered = options[:buffered]
+      @cli = options[:cli]
+      @interactive = options[:interactive]
     end
 
     # Run a command whose parameters are expressed using some Rubyish sugar.

@@ -70,7 +70,7 @@ module Backticks
       # Unix-like parameters.
       #
       # @return [Array] list of String command-line options
-      def self.options(**opts)
+      def self.options(opts={})
         flags = []
 
         # Transform opts into golang flags-style command line parameters;
