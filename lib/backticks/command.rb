@@ -46,6 +46,8 @@ module Backticks
     #
     # @param [Float,Integer] limit number of seconds to wait before returning
     def join(limit=nil)
+      return self if @status
+
       if limit
         tf = Time.now + limit
       else

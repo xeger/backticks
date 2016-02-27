@@ -3,6 +3,8 @@
 Backticks is a powerful, intuitive OOP wrapper for invoking command-line processes and
 interacting with them.
 
+![Build Status](https://travis-ci.org/xeger/backticks.svg) [![Coverage Status](https://coveralls.io/repos/xeger/backticks/badge.svg?branch=master&service=github)](https://coveralls.io/github/xeger/backticks?branch=master)
+
 "Powerful" comes from features that make Backticks especially well suited for time-sensitive
 or record/playback applications:
   - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for realtime stdout/stdin
@@ -59,7 +61,7 @@ puts output
 
 # The hard way. Allows customized behavior; returns a Command object that
 # allows you to interact with the running command.
-command = Backticks::Runner.new(interactive:true).command('ls', R:true, '*.rb')
+command = Backticks::Runner.new(interactive:true).run('ls', R:true, '*.rb')
 command.join
 puts "Exit status: #{command.status.to_i}. Output:"
 puts command.captured_output
@@ -93,7 +95,7 @@ accordingly:
 ```ruby
 require 'io/console'
 # In IRB, call raw! on same line as command; IRB prompt uses raw I/O
-STDOUT.raw! ; Backticks::Runner.new(interactive:true).command('vi').join
+STDOUT.raw! ; Backticks::Runner.new(interactive:true).run('vi').join
 ```
 
 ### Literally Overriding Ruby's Backticks
