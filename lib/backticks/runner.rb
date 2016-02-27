@@ -39,6 +39,12 @@ module Backticks
       @interactive = interactive
     end
 
+    # @deprecated
+    def command(*sugar)
+      warn 'Backticks::Runner#command is deprecated; please call #run instead'
+      run(*sugar)
+    end
+
     # Run a command whose parameters are expressed using some Rubyish sugar.
     # This method accepts an arbitrary number of positional parameters; each
     # parameter can be a Hash, an array, or a simple Object. Arrays and simple
@@ -50,15 +56,23 @@ module Backticks
     #
     # @see Backticks::CLI::Getopt for option-Hash format information
     #
-    # @param [Array] args list of command words and options
+    # @param [Array] sugar list of command words and options
     #
     # @return [Command] the running command
     #
     # @example Run docker-compose with complex parameters
-    #   command('docker-compose', {file: 'joe.yml'}, 'up', {d:true}, 'mysvc')
-    def command(*args)
-      argv = @cli.parameters(*args)
+    #   run('docker-compose', {file: 'joe.yml'}, 'up', {d:true}, 'mysvc')
+    def run(*sugar)
+      run_without_sugar(@cli.parameters(*sugar))
+    end
 
+    # Run a command whose argv is specified in the same manner as Kernel#exec,
+    # with no Rubyish sugar.
+    #
+    # @param [Array] argv command to run; argv[0] is program name and the
+    #   remaining elements are parameters and flags
+    # @return [Command] the running command
+    def run_without_sugar(argv)
       if self.buffered
         run_buffered(argv)
       else
