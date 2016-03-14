@@ -94,7 +94,7 @@ module Backticks
     private
     def run_unbuffered(argv)
       stdout, stdout_w = PTY.open
-      stdin_r, stdin = PTY.open
+      stdin_r, stdin = IO.pipe
       stderr, stderr_w = PTY.open
       pid = spawn(*argv, in: stdin_r, out: stdout_w, err: stderr_w)
       stdin_r.close
