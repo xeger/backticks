@@ -93,12 +93,12 @@ module Backticks
       # proxy STDIN to child's stdin
       if ready && ready.include?(STDIN)
         input = STDIN.readpartial(CHUNK) rescue nil
-        @captured_input << input
         if input
+          @captured_input << input
           @stdin.write(input)
         else
           # our own STDIN got closed; proxy this fact to the child
-          @stdin.close
+          @stdin.close unless @stdin.closed?
         end
       end
 
