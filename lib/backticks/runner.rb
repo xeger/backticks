@@ -8,7 +8,7 @@ module Backticks
   # By default commands are unbuffered, using a pseudoterminal to capture
   # the output with no delay.
   class Runner
-    # Symbolic names for the three I/O streams that can be buffered.
+    # Default streams to buffer if someone calls bufferered= with Boolean.
     BUFFERED = [:stdin, :stdout, :stderr].freeze
 
     # If true, commands will have their stdio streams tied to the parent
@@ -100,12 +100,12 @@ module Backticks
     #   remaining elements are parameters and flags
     # @return [Command] the running command
     def run_without_sugar(argv)
-      stdin_r, stdin = if buffered.include?(:stdin)
+      stdin_r, stdin = if buffered.include?(:stdin) && !interactive
         IO.pipe
       else
         PTY.open
       end
-      stdout, stdout_w = if buffered.include?(:stdout)
+      stdout, stdout_w = if buffered.include?(:stdout) && !interactive
         IO.pipe
       else
         PTY.open
@@ -120,7 +120,7 @@ module Backticks
       stdin_r.close
       stdout_w.close
       stderr_w.close
-      unless @interactive
+      unless interactive
         stdin.close
         stdin = nil
       end

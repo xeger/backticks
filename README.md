@@ -111,6 +111,18 @@ include Backticks::Ext
 
 If you do this, I will hunt you down and scoff at you. You have been warned!
 
+## Security
+
+Backticks avoids using your OS shell, which helps prevent security bugs.
+This also means that you can't pass strings such as "$HOME" to commands;
+Backticks does not perform shell substitution. Pass ENV['HOME'] instead.
+
+Be careful about the commands you pass to Backticks! Never run commands that
+you read from an untrusted source, e.g. the network.
+
+In the future, Backticks may integrate with Ruby's $SAFE level to provide smart
+escaping and shell safety.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
