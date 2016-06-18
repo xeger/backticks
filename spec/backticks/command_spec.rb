@@ -26,4 +26,13 @@ describe Backticks::Command do
       end
     end
   end
+
+  [:captured_stdin, :captured_stdout, :captured_stderr].each do |deprecated|
+    describe format('#%s',deprecated) do
+      it 'does not exist' do
+        pending('major version 1.0') if Backticks::VERSION < '1'
+        expect(subject.respond_to?(deprecated)).to eq(false)
+      end
+    end
+  end
 end

@@ -19,3 +19,12 @@ RSpec::Matchers.define :fail do
     expect(actual.status).not_to be_success
   end
 end
+
+# Expect a Backticks::Command to have a certain pid
+RSpec::Matchers.define :have_pid do |pid|
+  match do |actual|
+    expect(actual).to respond_to(:pid)
+    expect(actual.pid).to equal(pid)
+  end
+end
+

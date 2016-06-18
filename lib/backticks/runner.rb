@@ -1,12 +1,16 @@
 require 'pty'
+require 'open3'
 
 module Backticks
   # An easy-to-use interface for invoking commands and capturing their output.
   # Instances of Runner can be interactive, which prints the command's output
   # to the terminal and also allows the user to interact with the command.
-  # They can also be unbuffered, which uses a pseudo-tty to capture the
-  # command's output with no delay or
+  # By default commands are unbuffered, using a pseudoterminal to capture
+  # the output with no delay.
   class Runner
+    # Symbolic names for the three I/O streams that can be buffered.
+    BUFFERED = [:stdin, :stdout, :stderr].freeze
+
     # If true, commands will have their stdio streams tied to the parent
     # process so the user can view their output and send input to them.
     # Commands' output is still captured normally when they are interactive.
@@ -21,18 +25,25 @@ module Backticks
     # @return [Boolean]
     attr_accessor :interactive
 
-    # If true, commands will be invoked with a pseudo-TTY for stdout in order
-    # to capture output as it is generated instead of waiting for pipe buffers
-    # to fill.
+    # List of I/O streams that should be captured using a pipe instead of
+    # a pseudoterminal.
     #
-    # @return [Boolean]
-    attr_accessor :buffered
+    # This may be a Boolean, or it may be an Array of stream names from the
+    # set [:stdin, stdout, stderr].
+    #
+    # @return [Array] list of symbolic stream names
+    attr_reader :buffered
 
     # @return [#parameters] the CLI-translation object used by this runner
     attr_reader :cli
 
     # Create an instance of Runner.
-    # @param [#parameters] cli object used to convert Ruby method parameters into command-line parameters
+    # @option [#include?,Boolean] buffered list of names; true/false for all/none
+    # @option [#parameters] cli command-line parameter translator
+    # @option [Boolean] interactive true to tie parent stdout/stdin to child
+    #
+    # @example buffer stdout
+    #   Runner.new(buffered:[:stdout])
     def initialize(options={})
       options = {
         :buffered => false,
@@ -40,9 +51,19 @@ module Backticks
         :interactive => false,
       }.merge(options)
 
-      @buffered = options[:buffered]
       @cli = options[:cli]
-      @interactive = options[:interactive]
+      self.buffered = options[:buffered]
+      self.interactive = options[:interactive]
+    end
+
+    # @param [Array,Boolean] buffered list of symbolic stream names; true/false for all/none
+    def buffered=(b)
+      @buffered = case b
+      when true then BUFFERED
+      when false, nil then []
+      else
+        b
+      end
     end
 
     # @deprecated
@@ -79,23 +100,22 @@ module Backticks
     #   remaining elements are parameters and flags
     # @return [Command] the running command
     def run_without_sugar(argv)
-      if self.buffered
-        run_buffered(argv)
+      stdin_r, stdin = if buffered.include?(:stdin)
+        IO.pipe
       else
-        run_unbuffered(argv)
+        PTY.open
       end
-    end
+      stdout, stdout_w = if buffered.include?(:stdout)
+        IO.pipe
+      else
+        PTY.open
+      end
+      stderr, stderr_w = if buffered.include?(:stderr)
+        IO.pipe
+      else
+        PTY.open
+      end
 
-    # Run a command. Use a pty to capture the unbuffered output.
-    #
-    # @param [Array] argv command to run; argv[0] is program name and the
-    #   remaining elements are parameters and flags
-    # @return [Command] the running command
-    private
-    def run_unbuffered(argv)
-      stdout, stdout_w = PTY.open
-      stdin_r, stdin = PTY.open
-      stderr, stderr_w = PTY.open
       pid = spawn(*argv, in: stdin_r, out: stdout_w, err: stderr_w)
       stdin_r.close
       stdout_w.close
@@ -106,23 +126,6 @@ module Backticks
       end
 
       Command.new(pid, stdin, stdout, stderr)
-    end
-
-    # Run a command. Perform no translation or substitution. Use a pipe
-    # to read the output, which may be buffered by the OS. Return the program's
-    # exit status and stdout.
-    #
-    # @param [Array] argv command to run; argv[0] is program name and the
-    #   remaining elements are command-line arguments.
-    # @return [Command] the running command
-    def run_buffered(argv)
-      stdin, stdout, stderr, thr = Open3.popen3(*argv)
-      unless @interactive
-        stdin.close
-        stdin = nil
-      end
-
-      Command.new(thr.pid, stdin, stdout, stderr)
     end
   end
 end

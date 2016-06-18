@@ -21,7 +21,10 @@ module Backticks
     attr_reader :pid
 
     # @return [String] all data captured (so far) from child's stdin/stdout/stderr
-    attr_reader :captured_input, :captured_output, :captured_error, :status
+    attr_reader :captured_input, :captured_output, :captured_error
+
+    # @return [nil,Process::Status] result of command if it has ended; nil if still running
+    attr_reader :status
 
     # Watch a running command.
     def initialize(pid, stdin, stdout, stderr)
