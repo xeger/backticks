@@ -24,6 +24,7 @@ describe Backticks::Runner do
       end
 
       it 'runs buffered' do
+        subject.interactive = false
         subject.buffered = true
         expect(PTY).to receive(:open).never
         expect(IO).to receive(:pipe).exactly(3).times
@@ -49,13 +50,6 @@ describe Backticks::Runner do
           expect(cmd).to have_pid(pid)
         end
       end
-    end
-  end
-
-  describe('BUFFERED') do
-    it 'buffers sparingly by default' do
-      pending('major version 1.0') if Backticks::VERSION < '1'
-      expect(Backticks::Runner::BUFFERED).to eq([:stderr])
     end
   end
 

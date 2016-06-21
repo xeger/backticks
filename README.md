@@ -64,7 +64,8 @@ puts output
 command = Backticks::Runner.new(interactive:true).run('ls', R:true, '*.rb')
 command.join
 puts "Exit status: #{command.status.to_i}. Output:"
-puts command.captured_output
+# TODO - update readme once we decide on a new I/O interface for Command
+puts command.output
 ```
 
 ### Buffering

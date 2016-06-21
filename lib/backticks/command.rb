@@ -20,9 +20,6 @@ module Backticks
     # @return [Integer] child process ID
     attr_reader :pid
 
-    # @return [String] all data captured (so far) from child's stdin/stdout/stderr
-    attr_reader :captured_input, :captured_output, :captured_error
-
     # @return [nil,Process::Status] result of command if it has ended; nil if still running
     attr_reader :status
 
@@ -40,6 +37,10 @@ module Backticks
 
     def interactive?
       !@stdin.nil?
+    end
+
+    def output
+      @captured_output
     end
 
     # Block until the command exits, or until limit seconds have passed. If
@@ -80,7 +81,6 @@ module Backticks
     #
     # @param [Float,Integer] number of seconds to wait before returning nil
     # @return [String,nil] fresh bytes from stdout/stderr, or nil if no output
-    private
     def capture(limit=nil)
       streams = [@stdout, @stderr]
       streams << STDIN if interactive?

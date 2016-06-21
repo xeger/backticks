@@ -22,7 +22,7 @@ describe Backticks::Command do
 
     context 'interactive' do
       let(:runner) { Backticks::Runner.new(:interactive => true) }
-      subject { Backticks::Runner.new(:interactive => true).command('ls') }
+      subject { Backticks::Runner.new(:interactive => true).run('ls') }
 
       it 'gracefully handles empty STDIN' do
         allow(IO).to receive(:select).and_return([[STDIN], nil, nil])

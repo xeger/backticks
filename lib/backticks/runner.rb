@@ -15,12 +15,8 @@ module Backticks
     # process so the user can view their output and send input to them.
     # Commands' output is still captured normally when they are interactive.
     #
-    # Note that interactivity doesn't work very well with unbuffered commands;
-    # we use pipes to connect to the command's stdio, and the OS forcibly
-    # buffers pipe I/O. If you want to send some input to your command, you
-    # may need to send a LOT of input before it receives any; the same problem
-    # applies to reading your command's output. If you set interactive to
-    # true, you usually want to set buffered to false!
+    # Note: if you set `interactive` to true, then stdin and stdout will be
+    # unbuffered regardless of how you have set `buffered`!
     #
     # @return [Boolean]
     attr_accessor :interactive
@@ -30,6 +26,9 @@ module Backticks
     #
     # This may be a Boolean, or it may be an Array of stream names from the
     # set [:stdin, stdout, stderr].
+    #
+    # Note: if you set `interactive` to true, then stdin and stdout will be
+    # unbuffered regardless of how you have set `buffered`!
     #
     # @return [Array] list of symbolic stream names
     attr_reader :buffered
@@ -64,12 +63,6 @@ module Backticks
       else
         b
       end
-    end
-
-    # @deprecated
-    def command(*sugar)
-      warn 'Backticks::Runner#command is deprecated; please call #run instead'
-      run(*sugar)
     end
 
     # Run a command whose parameters are expressed using some Rubyish sugar.
