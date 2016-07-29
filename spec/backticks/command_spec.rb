@@ -11,6 +11,32 @@ describe Backticks::Command do
   # (i.e. real processes are invoked).
   let(:runner) { Backticks::Runner.new(:buffered => true) }
 
+  describe '#tap' do
+    subject { runner.run('echo the quick red fox jumped over the lazy brown dog') }
+
+    it 'can discard output' do
+      subject.tap { |stream, data| nil }
+      subject.join
+      expect(subject.captured_output).to eq('')
+    end
+
+    it 'can transform output' do
+      subject.tap { |stream, data| data.reverse }
+      subject.join
+      expect(subject.captured_output.strip).to eq('god nworb yzal eht revo depmuj xof der kciuq eht')
+    end
+
+    it 'idempotently allows one block' do
+      blk = lambda { |s, d| d.reverse }
+
+      subject.tap(&blk)
+
+      expect do
+        subject.tap { |s, d| d * 2 }
+      end.to raise_error(StandardError)
+    end
+  end
+
   describe '#join' do
     subject { runner.run('ls') }
 
@@ -40,15 +66,10 @@ describe Backticks::Command do
     end
   end
 
-  context 'deprecated methods' do
+  it 'has captured_xxx readers' do
     [:captured_input, :captured_output, :captured_error].each do |d|
-      describe format('#%s',d) do
-        it 'does not exist' do
-          pending('major version 1.0') if Backticks::VERSION < '1'
-          expect(subject).to be_a(Backticks::Command)
-          expect(subject.respond_to?(d)).to eq(false)
-        end
-      end
+      expect(subject).to be_a(Backticks::Command)
+      expect(subject.respond_to?(d)).to eq(true)
     end
   end
 end

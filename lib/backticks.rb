@@ -26,7 +26,7 @@ module Backticks
   def self.run(*sugar)
     command = self.new(*sugar)
     command.join
-    raise "TODO - decide on new I/O interface for Command" 
+    command.captured_output
   end
 
   # Run a command; return whether it succeeded or failed.

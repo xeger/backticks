@@ -64,8 +64,7 @@ puts output
 command = Backticks::Runner.new(interactive:true).run('ls', R:true, '*.rb')
 command.join
 puts "Exit status: #{command.status.to_i}. Output:"
-# TODO - update readme once we decide on a new I/O interface for Command
-puts command.output
+puts command.captured_output
 ```
 
 ### Buffering
@@ -82,9 +81,16 @@ r = Backticks::Runner.new(buffered:true)
 
 # or later on
 r.buffered = false
+
+# you can also specify invididual stream names to buffer
+r.buffered = [:stderr]
 ```
 
-### Interactivity
+When you read the `buffered` attribute of a Runner, it returns the list of
+stream names that are buffered; this means that even if you _write_ a boolean
+to this attribute, you will _read_ an Array of Symbol.
+
+### Interactivity and Real-Time Capture
 
 If you set `interactive:true` on the Runner, the console of the calling (Ruby)
 process is "tied" to the child's I/O streams, allowing the user to interact
@@ -97,6 +103,26 @@ accordingly:
 require 'io/console'
 # In IRB, call raw! on same line as command; IRB prompt uses raw I/O
 STDOUT.raw! ; Backticks::Runner.new(interactive:true).run('vi').join
+```
+
+You can use the `Command#tap` method to intercept I/O streams in real time,
+with or without interactivity. To start the tap, pass a block to the method.
+Your block should accept two parameters: a Symbol stream name (:stdin,
+:stdout, :stderr) and a String with binary encoding that contains fresh
+input or output.
+
+The result of your block is used to decide what to do with the input/output:
+nil means "discard" and a modified string is captured in place of the original.
+
+Try loading the README in an editor with all of the vowels scrambled. Scroll
+around and notice how words change when they leave and enter the screen!
+
+```ruby
+STDOUT.raw! ; cmd = Backticks::Runner.new(interactive:true).run('vi', 'README.md') ; cmd.tap do |io, bytes|
+  vowels = 'aeiou'  
+  bytes.gsub!(/[#{vowels}]/) { vowels[rand(vowels.size)] } if io == :stdout
+  bytes
+end ; cmd.join ; nil
 ```
 
 ### Literally Overriding Ruby's Backticks

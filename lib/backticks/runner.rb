@@ -25,7 +25,7 @@ module Backticks
     # a pseudoterminal.
     #
     # This may be a Boolean, or it may be an Array of stream names from the
-    # set [:stdin, stdout, stderr].
+    # set [:stdin, :stdout, :stderr].
     #
     # Note: if you set `interactive` to true, then stdin and stdout will be
     # unbuffered regardless of how you have set `buffered`!

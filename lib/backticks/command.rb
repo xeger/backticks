@@ -23,6 +23,15 @@ module Backticks
     # @return [nil,Process::Status] result of command if it has ended; nil if still running
     attr_reader :status
 
+    # @return [String] all input that has been captured so far
+    attr_reader :captured_input
+
+    # @return [String] all output that has been captured so far
+    attr_reader :captured_output
+
+    # @return [String] all output to stderr that has been captured so far
+    attr_reader :captured_error
+
     # Watch a running command.
     def initialize(pid, stdin, stdout, stderr)
       @pid = pid
@@ -35,12 +44,21 @@ module Backticks
       @captured_error  = String.new.force_encoding(Encoding::BINARY)
     end
 
+    # @return [String]
+    def to_s
+      "#<Backticks::Command(@pid=#{pid},@status=#{@status || 'nil'})>"
+    end
+
     def interactive?
       !@stdin.nil?
     end
 
-    def output
-      @captured_output
+    # Provide a callback to monitor input and output in real time.
+    # @yield
+    # @yieldparam
+    def tap(&block)
+      raise StandardError.new("Tap is already set (#{@tap}); cannot set twice") if @tap && @tap != block
+      @tap = block
     end
 
     # Block until the command exits, or until limit seconds have passed. If
@@ -74,7 +92,7 @@ module Backticks
     #  - the command produces fresh output on stdout or stderr
     #  - the user passes some input to the command (if interactive)
     #  - the process exits
-    #  - the time limit elapses (if provided)
+    #  - the time limit elapses (if provided) OR 60 seconds pass
     #
     # Return up to CHUNK bytes of fresh output from the process, or return nil
     # if no fresh output was produced
@@ -91,15 +109,19 @@ module Backticks
         tf = FOREVER
       end
 
-      ready, _, _ = IO.select(streams, [], [], 1)
+      ready, _, _ = IO.select(streams, [], [], 0)
 
       # proxy STDIN to child's stdin
       if ready && ready.include?(STDIN)
-        input = STDIN.readpartial(CHUNK) rescue nil
-        if input
-          @captured_input << input
-          @stdin.write(input)
+        data = STDIN.readpartial(CHUNK) rescue nil
+        if data
+          data = @tap.call(:stdin, data) if @tap
+          if data
+            @captured_input << data
+            @stdin.write(data)
+          end
         else
+          @tap.call(:stdin, nil) if @tap
           # our own STDIN got closed; proxy this fact to the child
           @stdin.close unless @stdin.closed?
         end
@@ -109,9 +131,12 @@ module Backticks
       if ready && ready.include?(@stdout)
         data = @stdout.readpartial(CHUNK) rescue nil
         if data
-          @captured_output << data
-          STDOUT.write(data) if interactive?
-          fresh_output = data
+          data = @tap.call(:stdout, data) if @tap
+          if data
+            @captured_output << data
+            STDOUT.write(data) if interactive?
+            fresh_output = data
+          end
         end
       end
 
@@ -119,8 +144,11 @@ module Backticks
       if ready && ready.include?(@stderr)
         data = @stderr.readpartial(CHUNK) rescue nil
         if data
-          @captured_error << data
-          STDERR.write(data) if interactive?
+          data = @tap.call(:stderr, data) if @tap
+          if data
+            @captured_error << data
+            STDERR.write(data) if interactive?
+          end
         end
       end
       fresh_output
