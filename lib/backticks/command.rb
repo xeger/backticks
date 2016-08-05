@@ -59,6 +59,15 @@ module Backticks
       @interactive
     end
 
+    # Block until the command completes; return true if its status
+    # was zero, false if nonzero.
+    #
+    # @return [Boolean]
+    def success?
+      join
+      status.success?
+    end
+
     # Provide a callback to monitor input and output in real time. This method
     # saves a reference to block for later use; whenever the command generates
     # output or receives input, the block is called back with the name of the

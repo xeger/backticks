@@ -11,6 +11,16 @@ describe Backticks::Command do
   # (i.e. real processes are invoked).
   let(:runner) { Backticks::Runner.new(:buffered => true) }
 
+  describe '#success?' do
+    it 'returns true when command succeeded' do
+      expect(runner.run('true').success?).to eq(true)
+    end
+
+    it 'returns false when command failed' do
+      expect(runner.run('false').success?).to eq(false)
+    end
+  end
+
   describe '#tap' do
     subject { runner.run('echo the quick red fox jumped over the lazy brown dog') }
 
