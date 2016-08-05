@@ -24,10 +24,10 @@ module Backticks
     # List of I/O streams that should be captured using a pipe instead of
     # a pseudoterminal.
     #
-    # This may be a Boolean, or it may be an Array of stream names from the
-    # set [:stdin, :stdout, :stderr].
+    # When read, this attribute is always an Array of stream names from the
+    # set `[:stdin, :stdout, :stderr]`.
     #
-    # Note: if you set `interactive` to true, then stdin and stdout will be
+    # **Note**: if you set `interactive` to true, then stdin and stdout are
     # unbuffered regardless of how you have set `buffered`!
     #
     # @return [Array] list of symbolic stream names
@@ -37,6 +37,7 @@ module Backticks
     attr_reader :cli
 
     # Create an instance of Runner.
+    #
     # @option [#include?,Boolean] buffered list of names; true/false for all/none
     # @option [#parameters] cli command-line parameter translator
     # @option [Boolean] interactive true to tie parent stdout/stdin to child
@@ -55,6 +56,13 @@ module Backticks
       self.interactive = options[:interactive]
     end
 
+    # Control which streams are buffered (i.e. use a pipe) and which are
+    # unbuffered (i.e. use a pseudo-TTY).
+    #
+    # If you pass a Boolean argument, it is converted to an Array; therefore,
+    # the reader for this attribute always returns a list even if you wrote
+    # a boolean value.
+    #
     # @param [Array,Boolean] buffered list of symbolic stream names; true/false for all/none
     def buffered=(b)
       @buffered = case b
@@ -118,7 +126,7 @@ module Backticks
         stdin = nil
       end
 
-      Command.new(pid, stdin, stdout, stderr)
+      Command.new(pid, stdin, stdout, stderr, interactive:interactive)
     end
   end
 end

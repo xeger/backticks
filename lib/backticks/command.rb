@@ -6,13 +6,11 @@ module Backticks
   # Interactive commands print their output to Ruby's STDOUT and STDERR
   # in realtime, and also pass input from Ruby's STDIN to the command's stdin.
   class Command
-    # Time value that is used internally when a user is willing to wait
-    # "forever" for the command.
-    #
-    # Using a definite time-value helps simplify the looping logic internally,
-    # but it does mean that this class will stop working in February of 2106.
-    # You have been warned!
-    FOREVER = Time.at(2**32-1).freeze
+    # Duration that we use when a caller is willing to wait "forever" for
+    # a command to finish. This means that `#join` is buggy when used with
+    # commands that take longer than a year to complete. You have been
+    # warned!
+    FOREVER = 86_400 * 365
 
     # Number of bytes to read from the command in one "chunk".
     CHUNK = 1_024
@@ -32,52 +30,62 @@ module Backticks
     # @return [String] all output to stderr that has been captured so far
     attr_reader :captured_error
 
-    # Watch a running command.
-    def initialize(pid, stdin, stdout, stderr)
+    # Watch a running command by taking ownership of the IO objects that
+    # are passed in.
+    #
+    # @param [Integer] pid
+    # @param [IO] stdin
+    # @param [IO] stdout
+    # @param [IO] stderr
+    def initialize(pid, stdin, stdout, stderr, interactive:false)
       @pid = pid
       @stdin = stdin
       @stdout = stdout
       @stderr = stderr
+      @interactive = !!interactive
 
       @captured_input  = String.new.force_encoding(Encoding::BINARY)
       @captured_output = String.new.force_encoding(Encoding::BINARY)
       @captured_error  = String.new.force_encoding(Encoding::BINARY)
     end
 
-    # @return [String]
+    # @return [String] a basic string representation of this command
     def to_s
       "#<Backticks::Command(@pid=#{pid},@status=#{@status || 'nil'})>"
     end
 
+    # @return [Boolean] true if this command is tied to STDIN/STDOUT
     def interactive?
-      !@stdin.nil?
+      @interactive
     end
 
-    # Provide a callback to monitor input and output in real time.
+    # Provide a callback to monitor input and output in real time. This method
+    # saves a reference to block for later use; whenever the command generates
+    # output or receives input, the block is called back with the name of the
+    # stream on which I/O occurred and the actual data that was read or written.
     # @yield
-    # @yieldparam
+    # @yieldparam [Symbol] stream one of :stdin, :stdout or :stderr
+    # @yieldparam [String] data fresh input from the designated stream
     def tap(&block)
       raise StandardError.new("Tap is already set (#{@tap}); cannot set twice") if @tap && @tap != block
       @tap = block
     end
 
     # Block until the command exits, or until limit seconds have passed. If
-    # interactive is true, pass user input to the command and print its output
-    # to Ruby's output streams. If the time limit expires, return `nil`;
-    # otherwise, return self.
+    # interactive is true, proxy STDIN to the command and print its output
+    # to STDOUT. If the time limit expires, return `nil`; otherwise, return
+    # self.
+    #
+    # If the command has already exited when this method is called, return
+    # self immediately.
     #
     # @param [Float,Integer] limit number of seconds to wait before returning
-    def join(limit=nil)
+    def join(limit=FOREVER)
       return self if @status
 
-      if limit
-        tf = Time.now + limit
-      else
-        tf = FOREVER
-      end
-
+      tf = Time.now + limit
       until (t = Time.now) >= tf
-        capture(tf - t)
+        capture(tf-t)
         res = Process.waitpid(@pid, Process::WNOHANG)
         if res
           @status = $?
@@ -103,13 +111,7 @@ module Backticks
       streams = [@stdout, @stderr]
       streams << STDIN if interactive?
 
-      if limit
-        tf = Time.now + limit
-      else
-        tf = FOREVER
-      end
-
-      ready, _, _ = IO.select(streams, [], [], 0)
+      ready, _, _ = IO.select(streams, [], [], limit)
 
       # proxy STDIN to child's stdin
       if ready && ready.include?(STDIN)

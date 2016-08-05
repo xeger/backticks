@@ -10,6 +10,7 @@ or record/playback applications:
   - Uses [pseudoterminals](https://en.wikipedia.org/wiki/Pseudoterminal) for realtime stdout/stdin
   - Captures input as well as output
   - Separates stdout from stderr
+  - Allows realtime monitoring and transformation of input/output
 
 "Intuitive" comes from a DSL that lets you provide command-line arguments as if they were
 Ruby method arguments:
@@ -105,6 +106,8 @@ require 'io/console'
 STDOUT.raw! ; Backticks::Runner.new(interactive:true).run('vi').join
 ```
 
+### Intercepting and Modifying I/O
+
 You can use the `Command#tap` method to intercept I/O streams in real time,
 with or without interactivity. To start the tap, pass a block to the method.
 Your block should accept two parameters: a Symbol stream name (:stdin,
@@ -112,14 +115,15 @@ Your block should accept two parameters: a Symbol stream name (:stdin,
 input or output.
 
 The result of your block is used to decide what to do with the input/output:
-nil means "discard" and a modified string is captured in place of the original.
+nil means "discard," any String means "use this in place of the original input
+or output.""
 
-Try loading the README in an editor with all of the vowels scrambled. Scroll
+Try loading `README.md` in an editor with all of the vowels scrambled. Scroll
 around and notice how words change when they leave and enter the screen!
 
 ```ruby
+vowels = 'aeiou'  
 STDOUT.raw! ; cmd = Backticks::Runner.new(interactive:true).run('vi', 'README.md') ; cmd.tap do |io, bytes|
-  vowels = 'aeiou'  
   bytes.gsub!(/[#{vowels}]/) { vowels[rand(vowels.size)] } if io == :stdout
   bytes
 end ; cmd.join ; nil

@@ -1,5 +1,5 @@
 # Unit test of the running-command object. Doubles as a functional test
-# for the runner (actual subprocesses are invoked).
+# for Runner and Command; actual subprocesses are invoked in some test cases.
 describe Backticks::Command do
   let(:pid) { 123 }
   let(:stdin) { double('stdin') }
@@ -46,7 +46,27 @@ describe Backticks::Command do
       expect(subject).to succeed
     end
 
-    context 'interactive' do
+    context 'given a time limit' do
+      before { allow(IO).to receive(:select).and_return([]) }
+
+      it 'waits forever when limit is nil' do
+        expect(IO).to receive(:select).with(
+          anything, anything, anything,
+          be_within(0.5).of(Backticks::Command::FOREVER)
+        )
+        subject.join
+      end
+
+      it 'returns early when limit is provided' do
+        expect(IO).to receive(:select).with(
+          anything, anything, anything,
+          be_within(0.5).of(3)
+        )
+        subject.join(3)
+      end
+    end
+
+    context 'given interactive is true' do
       let(:runner) { Backticks::Runner.new(:interactive => true) }
       subject { Backticks::Runner.new(:interactive => true).run('ls') }
 
@@ -66,7 +86,25 @@ describe Backticks::Command do
     end
   end
 
-  it 'has captured_xxx readers' do
+  describe '#capture' do
+    subject { runner.run('sh', '-c', 'sleep 1 ; echo hi') }
+
+    it 'waits forever when limit is nil' do
+      t0 = Time.now
+      subject.capture
+      t1 = Time.now
+      expect(t1 - t0).to be_within(0.5).of(1)
+    end
+
+    it 'returns early when limit is present' do
+      t0 = Time.now
+      subject.capture(0.1)
+      t1 = Time.now
+      expect(t1 - t0).to be_within(0.05).of(0.1)
+    end
+  end
+
+  it 'has attribute readers for captured I/O' do
     [:captured_input, :captured_output, :captured_error].each do |d|
       expect(subject).to be_a(Backticks::Command)
       expect(subject.respond_to?(d)).to eq(true)
