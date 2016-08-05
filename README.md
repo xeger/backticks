@@ -1,9 +1,7 @@
-# Introduction
+![Build Status](https://travis-ci.org/xeger/backticks.svg) [![Coverage Status](https://coveralls.io/repos/xeger/backticks/badge.svg?branch=master&service=github)](https://coveralls.io/github/xeger/backticks?branch=master) [![Docs](https://img.shields.io/badge/docs-rubydoc-blue.svg)](http://www.rubydoc.info/gems/backticks)
 
 Backticks is a powerful, intuitive OOP wrapper for invoking command-line processes and
 interacting with them.
-
-![Build Status](https://travis-ci.org/xeger/backticks.svg) [![Coverage Status](https://coveralls.io/repos/xeger/backticks/badge.svg?branch=master&service=github)](https://coveralls.io/github/xeger/backticks?branch=master)
 
 "Powerful" comes from features that make Backticks especially well suited for time-sensitive
 or record/playback applications:
