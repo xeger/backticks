@@ -1,3 +1,5 @@
+require 'pry'
+
 require 'coveralls'
 Coveralls.wear!
 
@@ -27,4 +29,3 @@ RSpec::Matchers.define :have_pid do |pid|
     expect(actual.pid).to equal(pid)
   end
 end
-
