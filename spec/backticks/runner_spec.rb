@@ -14,42 +14,52 @@ describe Backticks::Runner do
   end
 
   describe '#run' do
-    context 'with default cli' do
-      it 'runs unbuffered' do
-        subject.buffered = false
-        expect(PTY).to receive(:open).exactly(3).times
-        expect(IO).to receive(:pipe).never
-        cmd = subject.run('ls', recursive:true, long:true)
-        expect(cmd).to have_pid(pid)
+    context 'given chdir' do
+      it 'spawns with new pwd' do
+        subject.chdir='/tmp/banana'
+        expect(subject).to receive(:spawn).with('ls', hash_including(chdir:'/tmp/banana'))
+        cmd = subject.run('ls')
       end
 
-      it 'runs buffered' do
-        subject.interactive = false
-        subject.buffered = true
-        expect(PTY).to receive(:open).never
-        expect(IO).to receive(:pipe).exactly(3).times
-        cmd = subject.run('ls', recursive:true, long:true)
-        expect(cmd).to have_pid(pid)
+      it 'defaults to PWD' do
+        subject.chdir=nil
+        expect(subject).to receive(:spawn).with('ls', hash_including(chdir:Dir.pwd))
+        cmd = subject.run('ls')
       end
+    end
 
-      it 'runs mixed' do
-        expect(PTY).to receive(:open).once
-        expect(IO).to receive(:pipe).twice
-        subject.buffered = [:stdin, :stderr]
-        cmd = subject.run('ls', recursive:true, long:true)
-        expect(cmd).to have_pid(pid)
-      end
+    it 'works when unbuffered' do
+      subject.buffered = false
+      expect(PTY).to receive(:open).exactly(3).times
+      expect(IO).to receive(:pipe).never
+      cmd = subject.run('ls', recursive:true, long:true)
+      expect(cmd).to have_pid(pid)
+    end
 
-      context 'when interactive' do
-        it 'runs interactive' do
-          expect(PTY).to receive(:open).twice
-          expect(IO).to receive(:pipe).once
-          subject.buffered = true
-          subject.interactive = true
-          cmd = subject.run('ls', recursive:true, long:true)
-          expect(cmd).to have_pid(pid)
-        end
-      end
+    it 'works when buffered' do
+      subject.interactive = false
+      subject.buffered = true
+      expect(PTY).to receive(:open).never
+      expect(IO).to receive(:pipe).exactly(3).times
+      cmd = subject.run('ls', recursive:true, long:true)
+      expect(cmd).to have_pid(pid)
+    end
+
+    it 'works when partially buffered' do
+      expect(PTY).to receive(:open).once
+      expect(IO).to receive(:pipe).twice
+      subject.buffered = [:stdin, :stderr]
+      cmd = subject.run('ls', recursive:true, long:true)
+      expect(cmd).to have_pid(pid)
+    end
+
+    it 'works when interactive' do
+      expect(PTY).to receive(:open).twice
+      expect(IO).to receive(:pipe).once
+      subject.buffered = true
+      subject.interactive = true
+      cmd = subject.run('ls', recursive:true, long:true)
+      expect(cmd).to have_pid(pid)
     end
   end
 
