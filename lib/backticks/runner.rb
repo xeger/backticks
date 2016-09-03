@@ -33,6 +33,9 @@ module Backticks
     # @return [Array] list of symbolic stream names
     attr_reader :buffered
 
+    # @return [String,nil] PWD for new child processes, default is Dir.pwd
+    attr_accessor :chdir
+
     # @return [#parameters] the CLI-translation object used by this runner
     attr_reader :cli
 
@@ -117,7 +120,8 @@ module Backticks
         PTY.open
       end
 
-      pid = spawn(*argv, in: stdin_r, out: stdout_w, err: stderr_w)
+      dir = @chdir || Dir.pwd
+      pid = spawn(*argv, in: stdin_r, out: stdout_w, err: stderr_w, chdir: dir)
       stdin_r.close
       stdout_w.close
       stderr_w.close
