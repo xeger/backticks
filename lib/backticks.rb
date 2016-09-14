@@ -3,6 +3,7 @@ require_relative 'backticks/cli'
 require_relative 'backticks/command'
 require_relative 'backticks/runner'
 require_relative 'backticks/ext'
+require_relative 'backticks/fancy'
 
 module Backticks
   # Run a command with default invocation options; return a Command object that
@@ -16,8 +17,8 @@ module Backticks
     Backticks::Runner.new.run(*sugar)
   end
 
-  # Run a command with default invocation options; wait for to exit, then return
-  # its output. Populate $? with the command's status before returning.
+  # Run a command with default invocation options; wait for it to exit, then
+  # return  its output. Populate $? with the command's status before returning.
   #
   # @param [Array] sugar list of command words and options
   # @return [String] the command's output

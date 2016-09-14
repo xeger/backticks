@@ -51,10 +51,12 @@ module Backticks
       options = {
         :buffered => false,
         :cli => Backticks::CLI::Getopt,
+        :command => Backticks::Command,
         :interactive => false,
       }.merge(options)
 
       @cli = options[:cli]
+      @command = options[:command]
       self.buffered = options[:buffered]
       self.interactive = options[:interactive]
     end
@@ -130,7 +132,7 @@ module Backticks
         stdin = nil
       end
 
-      Command.new(pid, stdin, stdout, stderr, interactive:interactive)
+      @command.new(pid, stdin, stdout, stderr, interactive:interactive)
     end
   end
 end

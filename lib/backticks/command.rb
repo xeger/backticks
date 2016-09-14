@@ -94,7 +94,7 @@ module Backticks
 
       tf = Time.now + limit
       until (t = Time.now) >= tf
-        capture(tf-t)
+        capture([tf-t, 60].min)
         res = Process.waitpid(@pid, Process::WNOHANG)
         if res
           @status = $?
@@ -108,8 +108,8 @@ module Backticks
     # Block until one of the following happens:
     #  - the command produces fresh output on stdout or stderr
     #  - the user passes some input to the command (if interactive)
+    #  - the time limit elapses (if provided)
     #  - the process exits
-    #  - the time limit elapses (if provided) OR 60 seconds pass
     #
     # Return up to CHUNK bytes of fresh output from the process, or return nil
     # if no fresh output was produced
@@ -124,7 +124,7 @@ module Backticks
 
       # proxy STDIN to child's stdin
       if ready && ready.include?(STDIN)
-        data = STDIN.readpartial(CHUNK) rescue nil
+        data = interactive_stdin rescue nil
         if data
           data = @tap.call(:stdin, data) if @tap
           if data
@@ -145,7 +145,7 @@ module Backticks
           data = @tap.call(:stdout, data) if @tap
           if data
             @captured_output << data
-            STDOUT.write(data) if interactive?
+            interactive_stdout(data)
             fresh_output = data
           end
         end
@@ -158,7 +158,7 @@ module Backticks
           data = @tap.call(:stderr, data) if @tap
           if data
             @captured_error << data
-            STDERR.write(data) if interactive?
+            interactive_stderr(data)
           end
         end
       end
@@ -167,6 +167,20 @@ module Backticks
       # Proxy Ctrl+C to the child
       (Process.kill('INT', @pid) rescue nil) if @interactive
       raise
+    end
+
+    private
+
+    def interactive_stdin
+      STDIN.readpartial(CHUNK)
+    end
+
+    def interactive_stdout(data)
+      STDOUT.write(data) if interactive?
+    end
+
+    def interactive_stderr(data)
+      STDERR.write(data) if interactive?
     end
   end
 end
