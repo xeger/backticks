@@ -1,4 +1,9 @@
-require 'pty'
+begin
+  require 'pty'
+rescue LoadError
+  # for Windows support, tolerate a missing PTY module
+end
+
 require 'open3'
 
 module Backticks
@@ -104,17 +109,21 @@ module Backticks
     #   remaining elements are parameters and flags
     # @return [Command] the running command
     def run_without_sugar(argv)
-      stdin_r, stdin = if buffered.include?(:stdin) && !interactive
+      nopty = !defined?(PTY)
+
+      stdin_r, stdin = if nopty || (buffered.include?(:stdin) && !interactive)
         IO.pipe
       else
         PTY.open
       end
-      stdout, stdout_w = if buffered.include?(:stdout) && !interactive
+
+      stdout, stdout_w = if nopty || (buffered.include?(:stdout) && !interactive)
         IO.pipe
       else
         PTY.open
       end
-      stderr, stderr_w = if buffered.include?(:stderr)
+
+      stderr, stderr_w = if nopty || buffered.include?(:stderr)
         IO.pipe
       else
         PTY.open
