@@ -118,7 +118,7 @@ module Backticks
     # @return [String,nil] fresh bytes from stdout/stderr, or nil if no output
     def capture(limit=nil)
       streams = [@stdout, @stderr]
-      streams << STDIN if interactive?
+      streams << STDIN if STDIN.tty? && interactive?
 
       ready, _, _ = IO.select(streams, [], [], limit)
 
