@@ -43,6 +43,8 @@ module Backticks
       @stdout = stdout
       @stderr = stderr
       @interactive = !!interactive
+      @tap = nil
+      @status = nil
 
       @captured_input  = String.new.force_encoding(Encoding::BINARY)
       @captured_output = String.new.force_encoding(Encoding::BINARY)

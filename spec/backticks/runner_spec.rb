@@ -18,13 +18,13 @@ describe Backticks::Runner do
       it 'spawns with new pwd' do
         subject.chdir='/tmp/banana'
         expect(subject).to receive(:spawn).with('ls', hash_including(chdir:'/tmp/banana'))
-        cmd = subject.run('ls')
+        subject.run('ls')
       end
 
       it 'defaults to PWD' do
         subject.chdir=nil
         expect(subject).to receive(:spawn).with('ls', hash_including(chdir:Dir.pwd))
-        cmd = subject.run('ls')
+        subject.run('ls')
       end
     end
 

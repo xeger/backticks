@@ -60,6 +60,7 @@ module Backticks
       }.merge(options)
 
       @cli = options[:cli]
+      @chdir = nil
       self.buffered = options[:buffered]
       self.interactive = options[:interactive]
     end
