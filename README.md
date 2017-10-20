@@ -13,7 +13,7 @@ or record/playback applications:
 "Intuitive" comes from a DSL that lets you provide command-line arguments as if they were
 Ruby method arguments:
 
-```
+```ruby
 Backticks.run 'ls', R:true, ignore_backups:true, hide:'.git'
 Backticks.run 'cp' {f:true}, '*.rb', '/mnt/awesome'
 ```
