@@ -6,6 +6,13 @@ Coveralls.wear!
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'backticks'
 
+RSpec.configure do |config|
+  config.filter_run focus: true
+  config.run_all_when_everything_filtered = true
+
+  RSpec::Expectations.configuration.on_potential_false_positives = :raise
+end
+
 # Expect a Backticks::Command to succeed.
 RSpec::Matchers.define :succeed do
   match do |actual|
