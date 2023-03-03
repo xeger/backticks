@@ -70,6 +70,11 @@ module Backticks
       status.success?
     end
 
+    # Determine whether output has been exhausted.
+    def eof?
+      @stdout.eof? && @stderr.eof?
+    end
+
     # Provide a callback to monitor input and output in real time. This method
     # saves a reference to block for later use; whenever the command generates
     # output or receives input, the block is called back with the name of the
@@ -100,6 +105,7 @@ module Backticks
         res = Process.waitpid(@pid, Process::WNOHANG)
         if res
           @status = $?
+          capture(nil) until eof?
           return self
         end
       end

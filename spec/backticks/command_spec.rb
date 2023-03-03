@@ -48,7 +48,8 @@ describe Backticks::Command do
   end
 
   describe '#join' do
-    subject { runner.run('ls') }
+    let(:chunky) { described_class::CHUNK*2 }
+    subject { runner.run("seq 1 #{chunky}") }
 
     it 'is idempotent' do
       subject.join
@@ -56,8 +57,16 @@ describe Backticks::Command do
       expect(subject).to succeed
     end
 
+    it 'exhausts the output stream' do
+      subject.join
+      expect(subject.captured_output).to end_with("#{chunky}\n")
+    end
+
     context 'given a time limit' do
-      before { allow(IO).to receive(:select).and_return([]) }
+      before {
+        allow(IO).to receive(:select).and_return([])
+        allow(subject).to receive(:eof?).and_return(true)
+      }
 
       it 'waits forever when limit is nil' do
         expect(IO).to receive(:select).with(
