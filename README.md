@@ -87,7 +87,8 @@ r.buffered = [:stderr]
 
 When you read the `buffered` attribute of a Runner, it returns the list of
 stream names that are buffered; this means that even if you _write_ a boolean
-to this attribute, you will _read_ an Array of Symbol.
+to this attribute, you will _read_ an Array of Symbol. You can call `buffered?`
+to get a boolean result instead.
 
 ### Interactivity and Real-Time Capture
 
