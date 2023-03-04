@@ -65,6 +65,13 @@ module Backticks
       self.interactive = options[:interactive]
     end
 
+    # Determine whether buffering is enabled.
+    #
+    # @return [true,false]
+    def buffered?
+      !!buffered
+    end
+    
     # Control which streams are buffered (i.e. use a pipe) and which are
     # unbuffered (i.e. use a pseudo-TTY).
     #
