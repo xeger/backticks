@@ -73,6 +73,11 @@ module Backticks
     # Determine whether output has been exhausted.
     def eof?
       @stdout.eof? && @stderr.eof?
+    rescue Errno::EIO
+      # The result of read operation when pty slave is closed is platform
+      # dependent.
+      # @see https://stackoverflow.com/questions/10238298/ruby-on-linux-pty-goes-away-without-eof-raises-errnoeio
+      true
     end
 
     # Provide a callback to monitor input and output in real time. This method

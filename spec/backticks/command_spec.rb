@@ -123,6 +123,21 @@ describe Backticks::Command do
     end
   end
 
+  describe '#eof?' do
+    context 'platform-dependent PTY behavior' do
+      it 'on stdout' do
+        expect(stdout).to receive(:eof?).and_raise(Errno::EIO)
+        expect(subject.eof?).to eq(true)
+      end
+
+      it 'on stderr' do
+        expect(stdout).to receive(:eof?).and_return(true)
+        expect(stderr).to receive(:eof?).and_raise(Errno::EIO)
+        expect(subject.eof?).to eq(true)
+      end
+    end
+  end
+
   it 'has attribute readers for captured I/O' do
     [:captured_input, :captured_output, :captured_error].each do |d|
       expect(subject).to be_a(Backticks::Command)
