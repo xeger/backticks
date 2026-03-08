@@ -86,8 +86,15 @@ describe Backticks::Command do
     end
 
     context 'given interactive is true' do
-      let(:runner) { Backticks::Runner.new(:interactive => true) }
-      subject { Backticks::Runner.new(:interactive => true).run('ls') }
+      subject { Backticks::Command.new(pid, stdin, stdout, stderr, interactive: true) }
+
+      before do
+        allow(stdout).to receive(:eof?).and_return(true)
+        allow(stderr).to receive(:eof?).and_return(true)
+        allow(stdin).to receive(:closed?).and_return(false)
+        allow(stdin).to receive(:close)
+        allow(Process).to receive(:waitpid).with(pid, Process::WNOHANG).and_return(pid)
+      end
 
       it 'gracefully handles empty STDIN' do
         allow(IO).to receive(:select).and_return([[STDIN], nil, nil])
