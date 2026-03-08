@@ -1,13 +1,14 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     permissions:
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -15,4 +16,12 @@ jobs:
         with:
           ruby-version: '3.3'
           bundler-cache: true
+      - name: Get version
+        id: version
+        run: echo "tag=v$(ruby -r ./lib/backticks/version -e 'puts Backticks::VERSION')" >> "$GITHUB_OUTPUT"
       - uses: rubygems/release-gem@v1
+      - name: Create GitHub release
+        run: gh release create "$TAG" --target "$GITHUB_SHA" --generate-notes --latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
