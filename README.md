@@ -1,4 +1,4 @@
-![Build Status](https://travis-ci.org/xeger/backticks.svg) [![Coverage Status](https://coveralls.io/repos/xeger/backticks/badge.svg?branch=master&service=github)](https://coveralls.io/github/xeger/backticks?branch=master) [![Docs](https://img.shields.io/badge/docs-rubydoc-blue.svg)](http://www.rubydoc.info/gems/backticks)
+[![CI](https://github.com/xeger/backticks/actions/workflows/ci.yml/badge.svg)](https://github.com/xeger/backticks/actions/workflows/ci.yml) [![Docs](https://img.shields.io/badge/docs-rubydoc-blue.svg)](http://www.rubydoc.info/gems/backticks)
 
 Backticks is a powerful, intuitive OOP wrapper for invoking command-line processes and
 interacting with them.
@@ -159,7 +159,7 @@ After checking out the repo, run `bin/setup` to install dependencies. Then, run 
 
 To install this gem onto your local machine, run `bundle exec rake install`.
 
-To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To release a new version, update the version number in `version.rb`, commit and push to master, then trigger the Release workflow from the Actions tab. The workflow publishes the gem and creates the GitHub release automatically.
 
 ## Contributing
 
